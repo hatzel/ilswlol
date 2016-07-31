@@ -97,18 +97,24 @@ def ist_lukas_schon_wach():
 
 @app.route("/")
 def index():
+    # We automatically enable raw output for curl users
+    raw_output = True if request.args.get('raw') != "False" else False
+    if request.headers.get('User-Agent', '').startswith("curl") and \
+       not raw_output == False and request.args.get('raw') is not None:
+        raw_output = True
+    
     schon_wach = cache.get('ist_lukas_schon_wach')
     if schon_wach is None:
         schon_wach = ist_lukas_schon_wach()
         cache.set('ist_lukas_schon_wach', schon_wach, timeout=5 * 60)
 
     if schon_wach:
-        if request.args.get('raw'):
+        if raw_output:
             return "JA"
         else:
             return render_template('index.html', schon_wach=True)
     else:
-        if request.args.get('raw'):
+        if raw_output:
             return "NEIN"
         else:
             return render_template('index.html', schon_wach=False)
